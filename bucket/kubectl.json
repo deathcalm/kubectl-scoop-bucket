@@ -1,0 +1,45 @@
+{
+  "version": "1.35.0",
+  "description": "Control the Kubernetes cluster manager.",
+  "homepage": "https://kubernetes.io/docs/reference/kubectl/",
+  "license": "Apache-2.0",
+  "architecture": {
+    "64bit": {
+      "url": "https://dl.k8s.io/release/v1.35.0/kubernetes-client-windows-amd64.tar.gz",
+      "hash": "https://dl.k8s.io/release/v1.35.0/kubernetes-client-windows-amd64.tar.gz.sha256"
+    },
+    "32bit": {
+      "url": "https://dl.k8s.io/release/v1.35.0/kubernetes-client-windows-386.tar.gz",
+      "hash": "https://dl.k8s.io/release/v1.35.0/kubernetes-client-windows-386.tar.gz.sha256"
+    },
+    "arm64": {
+      "url": "https://dl.k8s.io/release/v1.35.0/kubernetes-client-windows-arm64.tar.gz",
+      "hash": "https://dl.k8s.io/release/v1.35.0/kubernetes-client-windows-arm64.tar.gz.sha256"
+    }
+  },
+  "extract_dir": "kubernetes/client",
+  "bin": [
+    "bin\\kubectl.exe",
+    "bin\\kubectl-convert.exe"
+  ],
+  "checkver": {
+    "url": "https://dl.k8s.io/release/stable.txt",
+    "regex": "v([\\d.]+)"
+  },
+  "autoupdate": {
+    "architecture": {
+      "64bit": {
+        "url": "https://dl.k8s.io/release/v$version/kubernetes-client-windows-amd64.tar.gz"
+      },
+      "32bit": {
+        "url": "https://dl.k8s.io/release/v$version/kubernetes-client-windows-386.tar.gz"
+      },
+      "arm64": {
+        "url": "https://dl.k8s.io/release/v$version/kubernetes-client-windows-arm64.tar.gz"
+      }
+    },
+    "hash": {
+      "url": "$url.sha256"
+    }
+  }
+}
