@@ -1,6 +1,7 @@
-import requests
-import os
+import aiohttp
+import asyncio
 import json
+import os
 
 # ---------------- CONFIG ----------------
 bucket_dir = "bucket"
@@ -13,41 +14,44 @@ archs = {
     "x86": "x86"
 }
 
-# ---------------- HELPER ----------------
-def get_all_versions():
-    versions = []
-    page = 1
-    per_page = 100
-    while True:
-        url = f"https://api.github.com/repos/kubernetes/kubernetes/releases?per_page={per_page}&page={page}"
-        r = requests.get(url, headers={"User-Agent": "python"})
-        if r.status_code != 200:
-            print(f"Warning: GitHub API failed, status {r.status_code}")
-            break
-        data = r.json()
-        if not data:
-            break
-        for rel in data:
-            tag = rel["tag_name"]
-            if tag.startswith("v") and len(tag.split(".")) == 3:
-                versions.append(tag)
-        page += 1
-    return versions
+# 控制最大并发请求数
+MAX_CONCURRENT_REQUESTS = 5
 
-def generate_manifest(version):
+# ---------------- HELPERS ----------------
+sem = asyncio.Semaphore(MAX_CONCURRENT_REQUESTS)
+
+async def fetch(session, url):
+    """异步抓取 URL 内容"""
+    async with sem:
+        try:
+            async with session.get(url, timeout=15) as resp:
+                if resp.status == 200:
+                    return await resp.text()
+        except Exception as e:
+            print(f"Fetch failed {url}: {e}")
+            return None
+
+async def generate_manifest(session, version):
+    """生成单个版本 manifest"""
     ver = version.lstrip("v")
     arch_dict = {}
+
+    tasks = []
     for name, suffix in archs.items():
         url = f"https://dl.k8s.io/release/{version}/bin/windows/{suffix}/kubectl.exe"
         hash_url = f"https://dl.k8s.io/release/{version}/bin/windows/{suffix}/kubectl.exe.sha256"
-        try:
-            r = requests.get(hash_url, timeout=10)
-            r.raise_for_status()
-            arch_dict[name] = {"url": url, "hash": r.text.strip()}
-        except:
-            continue
+        tasks.append(fetch(session, hash_url))
+
+    results = await asyncio.gather(*tasks)
+    for idx, content in enumerate(results):
+        if content:
+            name = list(archs.keys())[idx]
+            suffix = list(archs.values())[idx]
+            url = f"https://dl.k8s.io/release/{version}/bin/windows/{suffix}/kubectl.exe"
+            arch_dict[name] = {"url": url, "hash": content.strip()}
 
     if not arch_dict:
+        print(f"{version} - No valid architectures found, skipping")
         return
 
     manifest = {
@@ -64,9 +68,43 @@ def generate_manifest(version):
         json.dump(manifest, f, indent=2)
     print(f"Generated manifest: {filename}")
 
+# ---------------- GITHUB RELEASES ----------------
+async def get_all_versions():
+    """抓取 kubernetes/kubernetes Releases，返回 tag 列表"""
+    versions = []
+    page = 1
+    per_page = 100
+
+    async with aiohttp.ClientSession(headers={"User-Agent": "python"}) as session:
+        while True:
+            url = f"https://api.github.com/repos/kubernetes/kubernetes/releases?per_page={per_page}&page={page}"
+            async with sem:
+                try:
+                    async with session.get(url) as resp:
+                        if resp.status != 200:
+                            print(f"GitHub API error {resp.status}")
+                            break
+                        data = await resp.json()
+                        if not data:
+                            break
+                        for rel in data:
+                            tag = rel["tag_name"]
+                            if tag.startswith("v") and len(tag.split(".")) == 3:
+                                versions.append(tag)
+                        print(f"Page {page} fetched, {len(data)} releases")
+                        page += 1
+                except Exception as e:
+                    print(f"GitHub fetch failed: {e}")
+                    await asyncio.sleep(10)
+    return versions
+
 # ---------------- MAIN ----------------
+async def main():
+    versions = await get_all_versions()
+    print(f"Found {len(versions)} valid kubectl versions")
+    async with aiohttp.ClientSession(headers={"User-Agent": "python"}) as session:
+        tasks = [generate_manifest(session, v) for v in versions]
+        await asyncio.gather(*tasks)
+
 if __name__ == "__main__":
-    versions = get_all_versions()
-    print(f"Found {len(versions)} valid kubectl versions.")
-    for v in versions:
-        generate_manifest(v)
+    asyncio.run(main())
