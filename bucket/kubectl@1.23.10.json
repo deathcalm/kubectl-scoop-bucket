@@ -1,0 +1,23 @@
+{
+  "version": "1.23.10",
+  "description": "Kubernetes kubectl CLI",
+  "homepage": "https://kubernetes.io/",
+  "license": "Apache-2.0",
+  "architecture": {
+    "64bit": {
+      "url": "https://dl.k8s.io/release/v1.23.10/bin/windows/amd64/kubectl.exe",
+      "hash": "0b9372a5ebf8ea35ad5345dcdeca4fd0e47ca4c1cb32d8212c0b26754b81e531"
+    },
+    "arm64": {
+      "url": "https://dl.k8s.io/release/v1.23.10/bin/windows/arm64/kubectl.exe",
+      "hash": "86f88765eeac1ecaad158205fc74527c2e78dc04a2bdcc25c6b40790424ebdbd"
+    },
+    "32bit": {
+      "url": "https://dl.k8s.io/release/v1.23.10/bin/windows/386/kubectl.exe",
+      "hash": "5b718bb1e745f607049b7a944c45db7f8df7c52f80301580ff5192327365d98b"
+    }
+  },
+  "bin": [
+    "kubectl.exe"
+  ]
+}
