@@ -6,15 +6,11 @@
   "architecture": {
     "64bit": {
       "url": "https://dl.k8s.io/release/v1.21.14/kubernetes-client-windows-amd64.tar.gz",
-      "hash": "https://dl.k8s.io/release/v1.21.14/kubernetes-client-windows-amd64.tar.gz.sha256"
+      "hash": "8ced1bf3f863e82acd43440431921ab36043cf01d94d03704066c0925f40b01d"
     },
     "32bit": {
       "url": "https://dl.k8s.io/release/v1.21.14/kubernetes-client-windows-386.tar.gz",
-      "hash": "https://dl.k8s.io/release/v1.21.14/kubernetes-client-windows-386.tar.gz.sha256"
-    },
-    "arm64": {
-      "url": "https://dl.k8s.io/release/v1.21.14/kubernetes-client-windows-arm64.tar.gz",
-      "hash": "https://dl.k8s.io/release/v1.21.14/kubernetes-client-windows-arm64.tar.gz.sha256"
+      "hash": "f35149c9deef6a4916d6761b6e9d8948bb308e2ba5aca76f4ce3014dfd2e5132"
     }
   },
   "extract_dir": "kubernetes/client",
@@ -32,9 +28,6 @@
       },
       "32bit": {
         "url": "https://dl.k8s.io/release/v$version/kubernetes-client-windows-386.tar.gz"
-      },
-      "arm64": {
-        "url": "https://dl.k8s.io/release/v$version/kubernetes-client-windows-arm64.tar.gz"
       }
     },
     "hash": {
